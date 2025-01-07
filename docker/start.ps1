@@ -29,7 +29,7 @@ docker system prune -f
 $applicationHost = Get-EnvVar -Key APPLICATION_HOST
 #$certPassword = Get-EnvVar -Key CERT_PASSWORD
 $kenticoProjectType = Get-EnvVar -Key KENTICO_PROJECT_TYPE
-$kenticoAdminPassword = Getn-EnvVar -Key KENTICO_ADMIN_PASSWORD
+$kenticoAdminPassword = Get-EnvVar -Key KENTICO_ADMIN_PASSWORD
 $mssqlServer = Get-EnvVar -Key MSSQL_SERVER
 $mssqlUser = Get-EnvVar -Key MSSQL_USER
 $mssqlPassword = Get-EnvVar -Key MSSQL_PASSWORD
@@ -62,9 +62,9 @@ if ($Init) {
     Push-Location (Join-Path $PSScriptRoot ..\)
 
     Write-Host "Instalation of kentico begins ..." -ForegroundColor Green 
-
-    dotnet new install kentico.xperience.templates -v=q
-    dotnet new $kenticoProjectType -n xbk
+    dotnet new uninstall kentico.xperience.templates
+    dotnet new install kentico.xperience.templates --force -v=q
+    dotnet new $kenticoProjectType -n xbk --force
 
     dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file .\$licenseFileName --recreate-existing-database
 
