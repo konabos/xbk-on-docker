@@ -1,0 +1,105 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker compose reference guide at
+# https://docs.docker.com/compose/compose-file/
+
+# Here the instructions define your application as a service called "app".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+
+name: xbk
+
+networks:
+  development:
+    name: development
+    driver: bridge
+
+services:
+  traefik:
+    container_name: traefik
+    isolation: default
+    image: traefik:v3.3.0-rc2
+    command:
+      - "--log.level=DEBUG"
+      - "--accesslog=true"
+      - "--api"
+      - "--api.debug=true"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entryPoints.websecure.address=:443"
+      - "--entryPoints.websecure.proxyProtocol.insecure=true"
+      - "--entryPoints.sqlserver.address=:1433"
+      - "--entryPoints.sqlserver.proxyProtocol.insecure=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "1433:1433"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/config/dynamic/dynamic.yaml:/etc/traefik/dynamic.yaml:ro
+      - ./certs:/etc/certs:ro
+    networks:
+      - development
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+  kentico:
+    container_name: kentico
+    isolation: default
+    image: mcr.microsoft.com/dotnet/aspnet:8.0
+    working_dir: "/www/"
+    command:
+      - "dotnet"
+      - "xbk.dll"
+    environment:
+      - ASPNETCORE_URLS=https://+:8001;http://+:8000
+      - ASPNETCORE_HTTPS_PORTS=8001
+      - ASPNETCORE_HTTP_PORTS=8000
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/certs/servercert.pfx
+      - DOTNET_ENVIRONMENT=Development
+    restart: always
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./certs:/certs
+      - ./data/website:/www
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kentico.entrypoints=websecure"
+      - "traefik.http.routers.kentico.rule=Host(`localhost`)"
+      - "traefik.http.routers.kentico.tls=true"
+    networks:
+      - development
+    depends_on:
+      - mssql
+      - traefik
+  mssql:
+    container_name: mssql
+    isolation: default
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/database:/var/opt/mssql/data
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_PASSWORD}
+      - MSSQL_PID=Developer
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.mssql.entrypoints=sqlserver"
+      - "traefik.tcp.routers.mssql.rule=HostSNI(`*`)"
+      - "traefik.tcp.services.mssql.loadbalancer.server.port=1433"
+    networks:
+      - development
+    depends_on:
+      - traefik

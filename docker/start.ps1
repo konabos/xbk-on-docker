@@ -1,0 +1,80 @@
+﻿param(
+    [Parameter()]
+    [switch]$Init
+)
+
+Import-Module -Name (Join-Path $PSScriptRoot ".\logo")
+Import-Module -Name (Join-Path $PSScriptRoot ".\tools\util")
+Show-Start
+
+#----------------------------------------------------------
+## check docker daemon is running
+#----------------------------------------------------------
+
+if (-Not (docker ps)) {
+    Write-Host "Unable to connect to Docker. Are you sure the Docker daemon is running?" -ForegroundColor Red
+    Break
+}
+
+#----------------------------------------------------------
+## clean up
+#----------------------------------------------------------
+
+docker system prune -f
+
+#----------------------------------------------------------
+## load variables
+#----------------------------------------------------------
+
+$applicationHost = Get-EnvVar -Key APPLICATION_HOST
+#$certPassword = Get-EnvVar -Key CERT_PASSWORD
+$kenticoProjectType = Get-EnvVar -Key KENTICO_PROJECT_TYPE
+$kenticoAdminPassword = Getn-EnvVar -Key KENTICO_ADMIN_PASSWORD
+$mssqlServer = Get-EnvVar -Key MSSQL_SERVER
+$mssqlUser = Get-EnvVar -Key MSSQL_USER
+$mssqlPassword = Get-EnvVar -Key MSSQL_PASSWORD
+$mssqlDatabase = Get-EnvVar -Key MSSQL_DATABASE
+
+$licenseFileName = Get-EnvVar -Key LICENSE_FILE_NAME
+$opensslPath = Get-EnvVar -Key OPENSSL_EXE_PATH
+
+#----------------------------------------------------------
+## check traefik ssl certs present
+#----------------------------------------------------------
+
+if (-not (Test-Path .\certs\servercert.pem)) {
+    .\tools\mkcert.ps1 -OpenSslPath $opensslPath
+}
+
+#----------------------------------------------------------
+## check if user override env file exists
+#----------------------------------------------------------
+
+Read-UserEnvFile
+
+#----------------------------------------------------------
+## start docker
+#----------------------------------------------------------
+
+docker-compose up -d
+
+if ($Init) {
+    Push-Location (Join-Path $PSScriptRoot ..\)
+
+    Write-Host "Instalation of kentico begins ..." -ForegroundColor Green 
+
+    dotnet new install kentico.xperience.templates -v=q
+    dotnet new $kenticoProjectType -n xbk
+
+    dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file .\$licenseFileName --recreate-existing-database
+
+    New-Item "appsettings.Development.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=mssql,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
+
+    dotnet publish xbk.csproj -c Release -o ".\docker\data\website"
+
+    Pop-Location
+}
+
+
+Write-Host "`n`nDone... opening https://$($applicationHost)" -ForegroundColor DarkGray
+Start-Process "http://$applicationHost"
