@@ -13,7 +13,7 @@ Installation process:
 
 1) copy your license.txt file into the root directory of the repository
 2) open terminal/powershell and change location into 'docker' folder from this repository
-3) run start.ps1 to 'warm up' containers, geneartes the certs and make sure that SQL Server container is running (answer yes to all questions and do not set any password for certificates)
+3) run start.ps1 to 'warm up' containers, generate the certs and make sure that SQL Server container is running (answer yes to all questions and do not set any password for certificates)
 4) run start.ps1 -Init (answer yes to all questions)
 5) run stop.ps1 to stop the containers
 6) run start.ps1 to reset all of the containers, after a minute or two you should be able to see your XbK instance via https://localhost
