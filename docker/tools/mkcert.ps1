@@ -32,13 +32,13 @@ try {
 
     $importParamsCA = @{
         FilePath          = (Join-Path $certsDirectory cacert.pem)
-        CertStoreLocation = 'Cert:\CurrentUser\My'
+        CertStoreLocation = 'Cert:\LocalMachine\Root'
     }
     Import-Certificate @importParamsCA
 
     $importParamsCert = @{
         FilePath          = (Join-Path $certsDirectory servercert.pem)
-        CertStoreLocation = 'Cert:\CurrentUser\My'
+        CertStoreLocation = 'Cert:\LocalMachine\Root'
     }
     Import-Certificate @importParamsCert
 
