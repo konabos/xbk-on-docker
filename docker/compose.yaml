@@ -80,8 +80,7 @@ services:
     networks:
       - development
     depends_on:
-      - mssql
-      - traefik
+      - sqlserver.configurator
   mssql:
     container_name: mssql
     isolation: default
@@ -89,7 +88,6 @@ services:
     restart: always
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1
-      interval: 10s
       timeout: 3s
       retries: 10
       start_period: 10s
@@ -107,5 +105,20 @@ services:
       - "traefik.tcp.services.mssql.loadbalancer.server.port=1433"
     networks:
       - development
+  sqlserver.configurator:
+    container_name: sqlserver.configurator
+    isolation: default
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: no
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - development
     depends_on:
-      - traefik
+      mssql:
+        condition: service_healthy
+    command: >
+      bash -c '
+      /opt/mssql-tools18/bin/sqlcmd -C -S mssql -U sa -P "${MSSQL_PASSWORD}" -d master -Q "SELECT 1";
+      echo "All done!";
+      '
