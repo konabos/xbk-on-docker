@@ -1,1 +1,9 @@
 license.txt
+src/*
+docker/data/database/*
+docker/data/website/*
+docker/certs/*.pem
+docker/certs/*.attr
+docker/certs/*.old
+docker/certs/*.csr
+docker/certs/*.pfx
