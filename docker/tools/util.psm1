@@ -28,4 +28,61 @@ function Read-UserEnvFile {
   }
 }
 
+function Wait-SiteResponsive {
+  param(
+    [Parameter()]
+    [string] $EndpointUrl = "http://localhost:8080/api/http/routers/kentico@docker"
+  )
+
+  Write-Host "Waiting for website's container to become available...`n`n" -ForegroundColor Green
+  $startTime = Get-Date
+  $i = 0
+  $cursorSave = (Get-Host).UI.RawUI.cursorsize
+  $colors = "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta"
+
+  do {
+    try {
+      $status = Invoke-RestMethod $EndpointUrl
+    }
+    catch {
+      if ($_.Exception.Response.StatusCode.value__ -ne "404") {
+        throw
+      }
+    }
+
+    # Credit: https://www.reddit.com/r/PowerShell/comments/i1bnfw/a_stupid_little_animation_script/
+    "`t(>'-')>", "`t^('-')^", "`t<('-'<)", "`t^('-')^" | % { 
+      Write-Host "`r$($_)" -NoNewline -ForegroundColor $colors[$i % 6]
+      Start-Sleep -Milliseconds 250
+    }
+    $i++
+  } while ($status.status -ne "enabled" -and $startTime.AddSeconds(30) -gt (Get-Date))
+
+  (Get-Host).UI.RawUI.cursorsize = $cursorSave
+
+  if (-not $status.status -eq "enabled") {
+    $status
+    Write-Error "Timeout waiting for website become available via Traefik proxy. Check website container logs."
+  }
+
+  Write-Host "`n`nWaiting for the website to become available ...`n`n" -ForegroundColor Green
+
+  $startTime = Get-Date
+
+  do {
+
+    try {
+      $response = Invoke-WebRequest -URI "https://localhost/"
+    }
+    catch {}
+    # Credit: https://www.reddit.com/r/PowerShell/comments/i1bnfw/a_stupid_little_animation_script/
+    "`t(>'-')>", "`t^('-')^", "`t<('-'<)", "`t^('-')^" | % { 
+      Write-Host "`r$($_)" -NoNewline -ForegroundColor $colors[$i % 6]
+      Start-Sleep -Milliseconds 250
+    }
+    $i++
+  } while ($response.StatusCode -ne 200 -and $startTime.AddSeconds(30) -gt (Get-Date))
+
+}
+
 Export-ModuleMember -Function *

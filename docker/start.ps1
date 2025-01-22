@@ -75,6 +75,7 @@ if ($Init) {
     Pop-Location
 }
 
+Wait-SiteResponsive
 
 Write-Host "`n`nDone... opening https://$($applicationHost)" -ForegroundColor DarkGray
 Start-Process "http://$applicationHost"
