@@ -59,18 +59,18 @@ Read-UserEnvFile
 docker-compose up -d
 
 if ($Init) {
-    Push-Location (Join-Path $PSScriptRoot ..\)
+    Push-Location (Join-Path $PSScriptRoot ..\src)
 
     Write-Host "Instalation of kentico begins ..." -ForegroundColor Green 
     dotnet new uninstall kentico.xperience.templates
     dotnet new install kentico.xperience.templates --force -v=q
     dotnet new $kenticoProjectType -n xbk --force
 
-    dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file .\$licenseFileName --recreate-existing-database
+    dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file ..\$licenseFileName --recreate-existing-database
 
     New-Item "appsettings.Development.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=mssql,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
 
-    dotnet publish xbk.csproj -c Release -o ".\docker\data\website"
+    dotnet publish xbk.csproj -c Release -o "..\docker\data\website"
 
     Pop-Location
 }
