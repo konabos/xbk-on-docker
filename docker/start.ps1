@@ -27,7 +27,6 @@ docker system prune -f
 #----------------------------------------------------------
 
 $applicationHost = Get-EnvVar -Key APPLICATION_HOST
-#$certPassword = Get-EnvVar -Key CERT_PASSWORD
 $kenticoProjectType = Get-EnvVar -Key KENTICO_PROJECT_TYPE
 $kenticoAdminPassword = Get-EnvVar -Key KENTICO_ADMIN_PASSWORD
 $mssqlServer = Get-EnvVar -Key MSSQL_SERVER
@@ -56,7 +55,7 @@ Read-UserEnvFile
 ## start docker
 #----------------------------------------------------------
 
-docker-compose up -d
+docker compose up -d
 
 if ($Init) {
     Push-Location (Join-Path $PSScriptRoot ..\src)
