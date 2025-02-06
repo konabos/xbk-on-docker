@@ -67,7 +67,9 @@ if ($Init) {
 
     dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file ..\$licenseFileName --recreate-existing-database
 
-    New-Item "appsettings.Development.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=mssql,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
+    New-Item "appsettings.Docker.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=mssql,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
+    New-Item "appsettings.Development.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=localhost,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
+
 
     dotnet publish xbk.csproj -c Release -o "..\docker\data\website"
 
@@ -77,4 +79,4 @@ if ($Init) {
 Wait-SiteResponsive
 
 Write-Host "`n`nDone... opening https://$($applicationHost)" -ForegroundColor DarkGray
-Start-Process "http://$applicationHost"
+Start-Process "https://$applicationHost"

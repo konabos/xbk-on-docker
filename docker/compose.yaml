@@ -63,7 +63,7 @@ services:
       - ASPNETCORE_HTTP_PORTS=8000
       - ASPNETCORE_Kestrel__Certificates__Default__Password=
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/certs/servercert.pfx
-      - DOTNET_ENVIRONMENT=Development
+      - DOTNET_ENVIRONMENT=Docker
     restart: always
     ports:
       - "8000:8000"
