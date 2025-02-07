@@ -10,12 +10,13 @@ You can use these containers to:
 <h2>Prerequisite</h2>
 
 - Xperience by Kentico license file (https://docs.kentico.com/developers-and-admins/installation/licenses)
-- enabled virtualization
+- (Windows only)enabled virtualization
 - installed GIT
-- changed execution policy ``Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass``
 - .NET 8 or .NET 9 installed (https://dotnet.microsoft.com/en-us/download/dotnet/8.0) 
-- installed docker ``switched into linux containers``
-- stop other services running on your environment (IIS, SQL Server)
+- installed Docker Desktop for macOS/Windows
+- (Windows only) switched into linux containers
+- (Windows only) changed execution policy ``Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass``
+- (Windows only) stop other services running on your environment (IIS, SQL Server)
 
 
 <h2>Other information</h2>
