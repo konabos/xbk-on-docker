@@ -7,3 +7,4 @@ docker/certs/*.attr
 docker/certs/*.old
 docker/certs/*.csr
 docker/certs/*.pfx
+.DS_Store

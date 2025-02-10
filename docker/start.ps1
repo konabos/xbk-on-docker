@@ -35,7 +35,12 @@ $mssqlPassword = Get-EnvVar -Key MSSQL_PASSWORD
 $mssqlDatabase = Get-EnvVar -Key MSSQL_DATABASE
 
 $licenseFileName = Get-EnvVar -Key LICENSE_FILE_NAME
-$opensslPath = Get-EnvVar -Key OPENSSL_EXE_PATH
+# Get OpenSSL path based on OS
+if ($IsMacOS) {
+    $opensslPath = "openssl"  # On macOS, OpenSSL is typically in PATH
+} else {
+    $opensslPath = Get-EnvVar -Key OPENSSL_EXE_PATH  # Windows needs explicit path
+}
 
 #----------------------------------------------------------
 ## check traefik ssl certs present
@@ -65,7 +70,8 @@ if ($Init) {
     dotnet new install kentico.xperience.templates --force -v=q
     dotnet new $kenticoProjectType -n xbk --force
 
-    dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file ..\$licenseFileName --recreate-existing-database
+    $licensePath = Join-Path (Get-Location).Path ".." $licenseFileName
+    dotnet kentico-xperience-dbmanager -- -s $mssqlServer -d $mssqlDatabase -u $mssqlUser -p $mssqlPassword -a $kenticoAdminPassword --hash-string-salt "hash_string_salt" --license-file $licensePath --recreate-existing-database
 
     New-Item "appsettings.Docker.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=mssql,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
     New-Item "appsettings.Development.json" -Force -ItemType File -Value "{`"ConnectionStrings`":{`"CMSConnectionString`":`"Data Source=localhost,1433;Initial Catalog=xbk;Integrated Security=False;Persist Security Info=False;User ID=$mssqlUser;Password=$mssqlPassword;Connect Timeout=60;Encrypt=False;Current Language=English;`"}}"
